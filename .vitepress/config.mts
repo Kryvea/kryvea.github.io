@@ -6,8 +6,8 @@ export default defineConfig({
   description: "The reporting platform you never expected",
 
   // GitHub Pages deployment
-  base: "/docs/",
-  head: [["link", { rel: "icon", href: "/docs/images/logo.svg" }]],
+  base: "/",
+  head: [["link", { rel: "icon", href: "/images/logo.svg" }]],
 
   // Performance optimizations
   cleanUrls: true,
