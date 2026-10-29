@@ -20,15 +20,14 @@ We welcome:
 
 ### Prerequisites
 
-- Go 1.24+
-- Node.js 18+
-- Docker & Docker Compose (for testing)
-- NPM (for hot reload)
+- Go 1.26+
+- Node.js 20+ & npm (for hot reload on frontend)
+- Docker & Docker Compose (for local testing)
 
 ### Backend Setup (Recommended Docker)
 
 ```bash
-sudo docker compose up --build
+docker compose up --build
 ```
 
 ### Frontend Setup

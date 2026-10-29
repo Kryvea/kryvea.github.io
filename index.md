@@ -64,12 +64,12 @@ Kryvea is a comprehensive reporting platform designed for security professionals
 
 ### Technology Stack
 
-| Backend         | Frontend     | Infrastructure       |
-| --------------- | ------------ | -------------------- |
-| **Go 1.24+**    | **React 19** | **Docker**           |
-| Fiber Framework | TypeScript   | Nginx                |
-| MongoDB         | Vite         | MongoDB Replica Sets |
-| Zerolog         | TailwindCSS  | SSL/TLS              |
+| Backend        | Frontend        | Infrastructure |
+| -------------- | --------------- | -------------- |
+| **Go 1.26**    | **React 19**    | **Docker**     |
+| Fiber          | TypeScript      | Nginx          |
+| PostgreSQL + Bun ORM     | Vite            | Docker Compose |
+| Zerolog        | Tailwind CSS    | TLS/SSL        |
 
 ### System Architecture
 
