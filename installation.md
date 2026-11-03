@@ -1,212 +1,119 @@
 # Installation Guide
 
-This guide will walk you through installing and deploying Kryvea.
+This guide covers the current Docker-based installation flow for Kryvea.
 
 ## Prerequisites
 
-### System Requirements
+- Docker and Docker Compose installed
+- Git available on the system
+- Port 443 free on the host, or change the published port in `docker-compose.yml`
 
-- **OS**: Linux, macOS, or Windows
-- **Disk Space**: Minimum 15GB
-- **Ports**: 443 (or custom port of your choice)
+## Quick Start
 
-### Software Requirements
-
-- **Docker**: Version 20.10 or higher
-- **Docker Compose**: Version 2.0 or higher
-
-### Installation Check
-
-```bash
-# Check Docker installation
-sudo docker --version
-# Expected: Docker version 20.10.0 or higher
-
-# Check Docker Compose installation
-sudo docker compose version
-# Expected: Docker Compose version v2.0.0 or higher
-```
-
-## Quick Installation (Docker)
-
-The fastest way to get Kryvea up and running.
-
-### Step 1: Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Kryvea/Kryvea.git
-cd kryvea
+cd Kryvea
 ```
 
-### Step 2: Start the Application
+### 2. Start the stack
 
 ```bash
-sudo docker compose up -d
+docker compose up --build -d
 ```
 
-This command will:
+This builds and runs the current container layout:
 
-- Build the Go backend
-- Build the React frontend
-- Initialize MongoDB with replica sets
-- Generate self-signed SSL certificates
-- Start all services in detached mode
+- `kryvea-pg`: PostgreSQL 16
+- `kryvea-migrate`: database migrations
+- `kryvea-app`: Go backend and API server
+- `kryvea-web`: Nginx frontend
 
-### Step 3: Wait for Initialization
+### 3. Wait for startup
 
-The first startup takes 2-5 minutes to build images and initialize the database.
+The first boot takes a few minutes while the database initializes and the app builds.
 
-Monitor the logs:
+Check status:
 
 ```bash
-sudo docker compose logs -f
+docker compose ps
+docker compose logs -f
 ```
 
-Look for:
+The app is ready once the backend and web container are healthy and the frontend is served via HTTPS on `https://localhost`.
 
-```
-kryvea-app  | Listening for connections on http://0.0.0.0:8080
-kryvea-web  | Configuration complete; ready for start up
-```
+### 4. Log in
 
-### Step 4: Access the Application
+Open:
 
-Open your browser and navigate to:
-
-```
+```text
 https://localhost
 ```
 
-**Accept the self-signed certificate warning** (development only)
+Accept the self-signed certificate warning in development mode.
 
-**Default credentials:**
+Default credentials:
 
 - Username: `kryvea`
 - Password: `kryveapassword`
 
-### Step 5: Populate Database with Sample Data (Optional)
+## Optional sample data
 
-To test Kryvea with sample data, run the following command:
+To seed example data:
 
 ```bash
 python3 scripts/populate_db/main.py
 ```
 
-## Production Deployment
+## Production notes
 
-### Security Checklist
+Before exposing the stack publicly:
 
-Before deploying to production:
+- change the default PostgreSQL credentials in `docker-compose.yml`
+- change `KRYVEA_ADMIN_PASS` in the app environment
+- use a real certificate instead of the default self-signed certificate
 
-- Change MongoDB credentials in `docker-compose.yml`
-- Use CA-issued SSL certificates (not self-signed)
-
-### Custom Configuration
-
-#### 1. Update docker-compose.yml
+Example overrides in `docker-compose.yml`:
 
 ```yaml
 services:
-  db:
+  pg:
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=your_secure_username
-      - MONGO_INITDB_ROOT_PASSWORD=your_secure_password
+      - POSTGRES_USER=kryvea
+      - POSTGRES_PASSWORD=change-me
 
   app:
     environment:
-      - KRYVEA_MONGO_URI=mongodb://your_secure_username:your_secure_password@kryvea-db:27017/?replicaSet=rs0
-```
-
-#### 2. Use Custom SSL Certificates
-
-```yaml
-web:
-  [...]
-  volumes:
-    - ./ssl/kryvea.local.key:/etc/nginx/ssl/kryvea.local.key:ro
-    - ./ssl/kryvea.local.pem:/etc/nginx/ssl/kryvea.local.pem:ro
-```
-
-#### 3. Change Default Port
-
-```yaml
-services:
-  web:
-    ports:
-      - "1337:443"
-```
-
-### Deployment with Custom Domain
-
-#### 1. Update Nginx Configuration
-
-Edit `web/nginx/nginx.conf`:
-
-```nginx
-server_name             your-domain.com;
-ssl_certificate        /etc/nginx/ssl/your-domain.com.pem;
-ssl_certificate_key    /etc/nginx/ssl/your-domain.com.key;
-```
-
-#### 2. Configure DNS
-
-Point your domain to the server IP address:
-
-```
-A record: your-domain.com -> your.server.ip.address
-```
-
-#### 3. Use Let's Encrypt for SSL
-
-```bash
-# Install certbot
-sudo apt-get install certbot
-
-# Generate certificate
-sudo certbot certonly --standalone -d your-domain.com
-
-# Update docker-compose.yml to use the certificates
-web:
-  [...]
-  volumes:
-    - ./ssl/your-domain.com.key:/etc/nginx/ssl/your-domain.com.key:ro
-    - ./ssl/your-domain.com.pem:/etc/nginx/ssl/your-domain.com.pem:ro
+      - KRYVEA_PG_DSN=postgres://kryvea:change-me@kryvea-pg:5432/kryvea?sslmode=disable
+      - KRYVEA_ADMIN_USER=kryvea
+      - KRYVEA_ADMIN_PASS=change-me
 ```
 
 ## Updating Kryvea
 
-### Docker Deployment
-
 ```bash
-# Pull latest changes
 git pull origin main
-
-# Rebuild and restart
-sudo docker compose down
-sudo docker compose up -d --build
+docker compose down
+docker compose up --build -d
 ```
 
 ## Uninstallation
 
-### Remove All Data (Docker)
+To remove the running stack and local data volumes:
 
 ```bash
-# Stop and remove containers
-sudo docker compose down
-
-# Remove images
-sudo docker rmi kryvea-app kryvea-web
-
-# Remove data directory
-cd ..
-sudo rm -rf Kryvea/.data
+docker compose down -v
 ```
 
-## Next Steps
+If you also want to remove locally built images:
 
-- **[Usage Guide](usage.md)** - Learn how to use Kryvea
-- **[Configuration](configuration.md)** - Advanced configuration
+```bash
+docker rmi kryvea-app kryvea-web kryvea-migrate
+```
 
----
+## Next steps
 
-Need help? Check the **[Troubleshooting Guide](troubleshooting.md)** or open an issue on GitHub.
+- [Usage Guide](usage.md) - Learn how to use Kryvea
+- [Configuration](configuration.md) - Advanced runtime settings
+- [Troubleshooting](troubleshooting.md) - Common issues and fixes
